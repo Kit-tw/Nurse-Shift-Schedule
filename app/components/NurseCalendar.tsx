@@ -3,15 +3,12 @@ import { useState } from 'react'
 import CalendarGrid from './CalendarGrid'
 import ShiftSummary from './ShiftSummary'
 import AllShiftsList from './AllShiftsList'
-
-export type ShiftId = 'morning' | 'evening' | 'night'
-export type Schedule = Record<string, ShiftId[]>
+import MonthlySalary from './MonthlySalary'
 
 export default function NurseCalendar() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
-  const [schedule, setSchedule] = useState<Schedule>({})
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
 
   function changeMonth(dir: number) {
@@ -19,13 +16,6 @@ export default function NurseCalendar() {
     const next = new Date(year, month + dir, 1)
     setYear(next.getFullYear()); setMonth(next.getMonth())
     setSelectedKey(null)
-  }
-
-  function saveShifts(key: string, shifts: ShiftId[]) {
-    setSchedule(prev => shifts.length > 0
-      ? { ...prev, [key]: shifts }
-      : Object.fromEntries(Object.entries(prev).filter(([k]) => k !== key))
-    )
   }
 
   return (
@@ -36,19 +26,15 @@ export default function NurseCalendar() {
         <div className="flex-1">
           <CalendarGrid
             year={year} month={month}
-            schedule={schedule}
             selectedKey={selectedKey}
             onSelectDay={setSelectedKey}
             onChangeMonth={changeMonth}
           />
         </div>
         <div className="w-64 flex flex-col gap-4">
-          <ShiftSummary
-            selectedKey={selectedKey}
-            schedule={schedule}
-            onSave={saveShifts}
-          />
-          <AllShiftsList year={year} month={month} schedule={schedule} />
+          <ShiftSummary selectedKey={selectedKey} />
+          <AllShiftsList year={year} month={month} />
+          <MonthlySalary year={year} month={month} />
         </div>
       </div>
     </div>

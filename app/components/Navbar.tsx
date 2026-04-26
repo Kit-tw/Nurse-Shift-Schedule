@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
-import { Menu } from 'antd';
+import React, { useState } from 'react';
+import { Menu, Button } from 'antd';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SettingOutlined } from '@ant-design/icons';
+import SettingsModal from './SettingsModal';
 
 export type NavComponent = {
     name: string;
@@ -17,6 +19,7 @@ const navItems: NavComponent[] = [
 
 export default function Navbar() {
     const pathname = usePathname();
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     const menuItems = navItems.map((item) => ({
         key: item.route,
@@ -24,11 +27,28 @@ export default function Navbar() {
     }));
 
     return (
-        <Menu
-            mode="horizontal"
-            selectedKeys={[pathname || '/']}
-            items={menuItems}
-            style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '0.5rem 1rem', fontSize: '1rem', fontWeight: 500 }}
-        />
+        <div className="flex items-center justify-between border-b border-gray-200 bg-white">
+            <Menu
+                mode="horizontal"
+                selectedKeys={[pathname || '/']}
+                items={menuItems}
+                style={{ display: 'flex', flex: 1, padding: '0.5rem 1rem', fontSize: '1rem', fontWeight: 500, borderBottom: 'none' }}
+            />
+            <div className="pr-6">
+                <Button
+                    type="text"
+                    icon={<SettingOutlined />}
+                    className="text-muted hover:text-primary transition-colors flex items-center font-medium"
+                    onClick={() => setSettingsOpen(true)}
+                >
+                    Global Settings
+                </Button>
+            </div>
+            <SettingsModal
+                visible={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                mode="global"
+            />
+        </div>
     );
 }

@@ -1,13 +1,17 @@
-import { Schedule } from './NurseCalendar'
-const MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
-const SHIFTS = { morning: { label: 'เช้า', icon: '☀', color: 'bg-green-100 text-green-800' }, evening: { label: 'บ่าย', icon: '🌅', color: 'bg-orange-100 text-orange-800' }, night: { label: 'ดึก', icon: '⏾', color: 'bg-blue-100 text-blue-800' } }
+import { MONTHS, SHIFTS } from '../constants'
+import { useAppSelector } from '../store/hooks'
+import { useState } from 'react'
+import SettingsModal from './SettingsModal'
 
-export default function CalendarGrid({ year, month, schedule, selectedKey, onSelectDay, onChangeMonth }: {
-  year: number; month: number; schedule: Schedule
+export default function CalendarGrid({ year, month, selectedKey, onSelectDay, onChangeMonth }: {
+  year: number; month: number;
   selectedKey: string | null
   onSelectDay: (key: string) => void
   onChangeMonth: (dir: number) => void
 }) {
+  const schedule = useAppSelector(state => state.schedule.data)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const prevMonthDays = new Date(year, month, 0).getDate()
@@ -22,11 +26,19 @@ export default function CalendarGrid({ year, month, schedule, selectedKey, onSel
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <span className="font-medium text-base">{MONTHS[month]} {year}</span>
-        <div className="flex gap-2">
-          <button onClick={() => onChangeMonth(-1)} className="border rounded px-2 py-1 text-sm border-border">‹</button>
-          <button onClick={() => onChangeMonth(0)} className="border rounded px-2 py-1 text-sm border-border">Today</button>
-          <button onClick={() => onChangeMonth(1)} className="border rounded px-2 py-1 text-sm border-border">›</button>
+        <div className="flex items-center gap-4">
+          <span className="font-medium text-base">{MONTHS[month]} {year}</span>
+          <div className="flex gap-2">
+            <button onClick={() => onChangeMonth(-1)} className="border rounded px-2 py-1 text-sm border-border">‹</button>
+            <button onClick={() => onChangeMonth(0)} className="border rounded px-2 py-1 text-sm border-border">Today</button>
+            <button onClick={() => onChangeMonth(1)} className="border rounded px-2 py-1 text-sm border-border">›</button>
+          </div>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="border border-primary text-primary px-3 py-1 text-sm rounded-lg hover:bg-primary-light transition-colors ml-2 font-medium"
+          >
+            Edit Month Settings
+          </button>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-1 mb-1">
@@ -37,7 +49,7 @@ export default function CalendarGrid({ year, month, schedule, selectedKey, onSel
       <div className="grid grid-cols-7 gap-1">
         {cells.map(({ day, current }, i) => {
           const key = current ? `${year}-${month}-${day}` : ''
-          const shifts = current ? schedule[key] || [] : []
+          const assignments = current ? schedule[key] || [] : []
           const isToday = key === todayKey
           const isSelected = key === selectedKey
           return (
@@ -52,15 +64,22 @@ export default function CalendarGrid({ year, month, schedule, selectedKey, onSel
                 ${isToday ? 'bg-success text-white rounded-full' : ''}`}>
                 {day}
               </div>
-              {shifts.map(sid => (
-                <div key={sid} className={`${SHIFTS[sid].color} rounded px-1 py-0.5 mb-0.5 text-[14px] font-medium`}>
-                  <span className="text-sm w-5 text-center">{SHIFTS[sid].icon}</span> {SHIFTS[sid].label}
+              {assignments.map(assignment => (
+                <div key={assignment.id} className={`${SHIFTS[assignment.id].color} rounded px-1 py-0.5 mb-0.5 text-[14px] font-medium flex items-center justify-between`}>
+                  <div><span className="text-sm w-5 text-center inline-block">{SHIFTS[assignment.id].icon}</span> {SHIFTS[assignment.id].label}</div>
+                  {assignment.rateType === 'ot' && <span className="text-[9px] bg-red-500 text-white px-1 rounded font-bold leading-tight">OT</span>}
                 </div>
               ))}
             </div>
           )
         })}
       </div>
+      <SettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        mode="month"
+        monthKey={`${year}-${month}`}
+      />
     </div>
   )
 }
