@@ -12,6 +12,7 @@ export type NavComponent = {
 
 const navItems: NavComponent[] = [
     { name: 'Home', route: '/' },
+    { name: 'Login / Register', route: '/login' },
 ];
 
 export default function Navbar() {
